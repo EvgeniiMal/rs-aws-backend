@@ -6,15 +6,6 @@ export const getProduct = async (
 ): Promise<APIGatewayProxyResult> => {
   const id = event.pathParameters?.id;
 
-  if (!id) {
-    return {
-      statusCode: 400,
-      body: JSON.stringify({
-        message: "Product ID is required",
-      }),
-    };
-  }
-
   const product = products.find((p) => String(p.id) === id);
 
   if (!product) {
