@@ -9,6 +9,9 @@ const PROJECT_ROOT = path.resolve(__dirname, '../../');
 const SRC_DIR = path.resolve(PROJECT_ROOT, 'src');
 const HANDLERS_DIR = path.resolve(SRC_DIR, 'handlers');
 
+const LAMBDA_TIMEOUT_SECONDS = 10;
+const DEFAULT_RUNTIME = lambda.Runtime.NODEJS_24_X;
+
 export class DeploymentStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -24,7 +27,7 @@ export class DeploymentStack extends cdk.Stack {
     const getProductById = new NodejsFunction(this, 'GetProductById', {
       projectRoot: PROJECT_ROOT,
       entry: path.resolve(HANDLERS_DIR, 'product.ts'),
-      handler: 'getProductById',
+      handler: 'getProduct',
       runtime: DEFAULT_RUNTIME,
       timeout: cdk.Duration.seconds(LAMBDA_TIMEOUT_SECONDS),
     });
@@ -43,8 +46,12 @@ export class DeploymentStack extends cdk.Stack {
     });
 
     const productResource = api.root.addResource('products');
+    const productByIdResource = productResource.addResource('{id}');
 
     productResource.addMethod('GET', new apigateway.LambdaIntegration(getProductList), {
+      authorizationType: apigateway.AuthorizationType.NONE,
+    });
+    productByIdResource.addMethod('GET', new apigateway.LambdaIntegration(getProductById), {
       authorizationType: apigateway.AuthorizationType.NONE,
     });
   }
