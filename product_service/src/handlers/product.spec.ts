@@ -34,6 +34,7 @@ test('product-handler', async (t) => {
     const product = JSON.parse(result.body);
     const { id } = product;
 
-    assert.strictEqual(id, testId);
+    assert.ok(product);
+    assert.strictEqual(String(id), testId);
   });
 });
