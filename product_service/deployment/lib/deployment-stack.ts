@@ -13,11 +13,39 @@ export class DeploymentStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const helloLambda = new NodejsFunction(this, 'HelloLambda', {
+    const getProductList = new NodejsFunction(this, 'GetProductList', {
       projectRoot: PROJECT_ROOT,
-      entry: path.resolve(HANDLERS_DIR, 'hello.handler.ts'),
-      handler: 'helloHandler',
-      runtime: lambda.Runtime.NODEJS_24_X,
+      entry: path.resolve(HANDLERS_DIR, 'product-list.ts'),
+      handler: 'getProductList',
+      runtime: DEFAULT_RUNTIME,
+      timeout: cdk.Duration.seconds(LAMBDA_TIMEOUT_SECONDS),
+    });
+
+    const getProductById = new NodejsFunction(this, 'GetProductById', {
+      projectRoot: PROJECT_ROOT,
+      entry: path.resolve(HANDLERS_DIR, 'product.ts'),
+      handler: 'getProductById',
+      runtime: DEFAULT_RUNTIME,
+      timeout: cdk.Duration.seconds(LAMBDA_TIMEOUT_SECONDS),
+    });
+
+    const api = new apigateway.RestApi(this, 'ProductsApi', {
+      deployOptions: {
+        stageName: 'dev',
+      },
+      defaultCorsPreflightOptions: {
+        allowOrigins: apigateway.Cors.ALL_ORIGINS,
+        allowMethods: apigateway.Cors.ALL_METHODS,
+        allowHeaders: apigateway.Cors.DEFAULT_HEADERS,
+      },
+      restApiName: 'Products Service',
+      description: 'This service serves products information.',
+    });
+
+    const productResource = api.root.addResource('products');
+
+    productResource.addMethod('GET', new apigateway.LambdaIntegration(getProductList), {
+      authorizationType: apigateway.AuthorizationType.NONE,
     });
   }
 }

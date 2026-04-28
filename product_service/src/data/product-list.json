@@ -1,0 +1,62 @@
+[
+  {
+    "id": "1",
+    "name": "First Product",
+    "price": 19.99,
+    "description": "This is the first sample product."
+  },
+  {
+    "id": "2",
+    "name": "Second Product",
+    "price": 29.99,
+    "description": "This is the second sample product."
+  },
+  {
+    "id": "3",
+    "name": "Third Product",
+    "price": 39.99,
+    "description": "This is the third sample product."
+  },
+  {
+    "id": "4",
+    "name": "Fourth Product",
+    "price": 49.99,
+    "description": "This is the fourth sample product."
+  },
+  {
+    "id": "5",
+    "name": "Fifth Product",
+    "price": 59.99,
+    "description": "This is the fifth sample product."
+  },
+  {
+    "id": "6",
+    "name": "Sixth Product",
+    "price": 69.99,
+    "description": "This is the sixth sample product."
+  },
+  {
+    "id": "7",
+    "name": "Seventh Product",
+    "price": 79.99,
+    "description": "This is the seventh sample product."
+  },
+  {
+    "id": "8",
+    "name": "Eighth Product",
+    "price": 89.99,
+    "description": "This is the eighth sample product."
+  },
+  {
+    "id": "9",
+    "name": "Ninth Product",
+    "price": 99.99,
+    "description": "This is the ninth sample product."
+  },
+  {
+    "id": "10",
+    "name": "Tenth Product",
+    "price": 109.99,
+    "description": "This is the tenth sample product."
+  }
+]
