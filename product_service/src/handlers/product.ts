@@ -1,5 +1,6 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import products from "../data/product-list.json";
+import { corsHeaders } from "../utils/cors-headers";
 
 export const getProduct = async (
   event: APIGatewayProxyEvent
@@ -11,6 +12,7 @@ export const getProduct = async (
   if (!product) {
     return {
       statusCode: 404,
+      headers: corsHeaders,
       body: JSON.stringify({
         message: "Product not found",
       }),
@@ -19,6 +21,7 @@ export const getProduct = async (
 
   return {
     statusCode: 200,
+    headers: corsHeaders,
     body: JSON.stringify(product),
   };
 };
