@@ -3,6 +3,10 @@ info:
   title: Product Service API
   version: 1.0.0
 
+servers:
+  - url: https://79ngk4sfs8.execute-api.eu-west-1.amazonaws.com/dev/products
+    description: Dev environment
+
 paths:
   /products:
     get:
