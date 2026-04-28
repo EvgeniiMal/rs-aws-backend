@@ -1,0 +1,18 @@
+{
+  "name": "product_service",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "cdk:synth": "cdk synth --app \"npx ts-node --project deployment/tsconfig.json deployment/bin/deployment.ts\" --output deployment/cdk.out",
+    "cdk:deploy": "cdk deploy --app \"npx ts-node --project deployment/tsconfig.json deployment/bin/deployment.ts\" --output deployment/cdk.out",
+    "cdk:destroy": "cdk destroy --app \"npx ts-node --project deployment/tsconfig.json deployment/bin/deployment.ts\" --output deployment/cdk.out",
+    "test": "node --import tsx --test \"src/**/*.spec.ts\""
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.161",
+    "@types/node": "^25.6.0",
+    "esbuild": "^0.28.0",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.3"
+  }
+}
