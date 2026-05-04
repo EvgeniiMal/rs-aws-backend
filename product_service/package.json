@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "seedDb": "node --import tsx ./src/data/db-seed.ts",
     "cdk:synth": "cdk synth --app \"npx ts-node --project deployment/tsconfig.json deployment/bin/deployment.ts\" --output deployment/cdk.out",
     "cdk:deploy": "cdk deploy --app \"npx ts-node --project deployment/tsconfig.json deployment/bin/deployment.ts\" --output deployment/cdk.out",
     "cdk:destroy": "cdk destroy --app \"npx ts-node --project deployment/tsconfig.json deployment/bin/deployment.ts\" --output deployment/cdk.out",
@@ -14,5 +15,9 @@
     "esbuild": "^0.28.0",
     "tsx": "^4.21.0",
     "typescript": "^6.0.3"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1041.0",
+    "@aws-sdk/lib-dynamodb": "^3.1041.0"
   }
 }
