@@ -4,14 +4,15 @@
   "private": true,
   "scripts": {
     "seedDb": "node --import tsx ./src/data/db-seed.ts",
-    "cdk:synth": "cdk synth --app \"npx ts-node --project deployment/tsconfig.json deployment/bin/deployment.ts\" --output deployment/cdk.out",
-    "cdk:deploy": "cdk deploy --app \"npx ts-node --project deployment/tsconfig.json deployment/bin/deployment.ts\" --output deployment/cdk.out",
-    "cdk:destroy": "cdk destroy --app \"npx ts-node --project deployment/tsconfig.json deployment/bin/deployment.ts\" --output deployment/cdk.out",
+    "cdk:synth": "cd deployment && cdk synth",
+    "cdk:deploy": "cd deployment && cdk deploy",
+    "cdk:destroy": "cd deployment && cdk destroy",
     "test": "node --import tsx --test \"src/**/*.spec.ts\""
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.161",
     "@types/node": "^25.6.0",
+    "aws-sdk-client-mock": "^4.1.0",
     "esbuild": "^0.28.0",
     "tsx": "^4.21.0",
     "typescript": "^6.0.3"
