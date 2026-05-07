@@ -1,20 +1,23 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { corsHeaders } from "../utils/cors-headers";
-import { isUUID } from "../utils/validate-uuid";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { GetCommand } from "@aws-sdk/lib-dynamodb";
+import zod from "zod";
 
 const client = new DynamoDBClient();
 const dynamoDb = DynamoDBDocumentClient.from(client);
+const pathSchema = zod.object({
+  id: zod.uuid(),
+});
 
 export const getProduct = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
-  const id = event.pathParameters?.id;
+  const result = pathSchema.safeParse(event.pathParameters);
 
-  if (!id || !isUUID(id)) {
-    console.warn("Invalid product id:", id);
+  if (!result.success) {
+    console.warn("Invalid product id:", event.pathParameters?.id);
     return {
       statusCode: 400,
       headers: corsHeaders,
@@ -24,17 +27,19 @@ export const getProduct = async (
     };
   }
 
+  const productId = result.data.id;
+
   const getProductCommand = new GetCommand({
     TableName: process.env.PRODUCTS_TABLE_NAME!,
     Key: {
-      [process.env.PRODUCTS_TABLE_PRIMARY_KEY!]: id,
+      [process.env.PRODUCTS_TABLE_PRIMARY_KEY!]: productId,
     },
   });
 
   const getProductStockCommand = new GetCommand({
     TableName: process.env.STOCKS_TABLE_NAME!,
     Key: {
-      [process.env.STOCKS_TABLE_PRIMARY_KEY!]: id,
+      [process.env.STOCKS_TABLE_PRIMARY_KEY!]: productId,
     },
   });
 
