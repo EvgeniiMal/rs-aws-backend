@@ -1,0 +1,72 @@
+[
+  {
+    "id": "1",
+    "title": "First Product",
+    "price": 19.99,
+    "description": "This is the first sample product.",
+    "count": 100
+  },
+  {
+    "id": "2",
+    "title": "Second Product",
+    "price": 29.99,
+    "description": "This is the second sample product.",
+    "count": 100
+  },
+  {
+    "id": "3",
+    "title": "Third Product",
+    "price": 39.99,
+    "description": "This is the third sample product.",
+    "count": 1693
+  },
+  {
+    "id": "4",
+    "title": "Fourth Product",
+    "price": 49.99,
+    "description": "This is the fourth sample product.",
+    "count": 1243
+  },
+  {
+    "id": "5",
+    "title": "Fifth Product",
+    "price": 59.99,
+    "description": "This is the fifth sample product.",
+    "count": 1432
+  },
+  {
+    "id": "6",
+    "title": "Sixth Product",
+    "price": 69.99,
+    "description": "This is the sixth sample product.",
+    "count": 953
+  },
+  {
+    "id": "7",
+    "title": "Seventh Product",
+    "price": 79.99,
+    "description": "This is the seventh sample product.",
+    "count": 11
+  },
+  {
+    "id": "8",
+    "title": "Eighth Product",
+    "price": 89.99,
+    "description": "This is the eighth sample product.",
+    "count": 130
+  },
+  {
+    "id": "9",
+    "title": "Ninth Product",
+    "price": 99.99,
+    "description": "This is the ninth sample product.",
+    "count": 156
+  },
+  {
+    "id": "10",
+    "title": "Tenth Product",
+    "price": 109.99,
+    "description": "This is the tenth sample product.",
+    "count": 32
+  }
+]
