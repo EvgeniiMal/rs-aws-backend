@@ -63,6 +63,20 @@ export class DeploymentStack extends cdk.Stack {
       },
     });
 
+    const createProduct = new NodejsFunction(this, 'CreateProduct', {
+      projectRoot: PROJECT_ROOT,
+      entry: path.resolve(HANDLERS_DIR, 'create-product.ts'),
+      handler: 'createProductHandler',
+      runtime: DEFAULT_RUNTIME,
+      timeout: cdk.Duration.seconds(lambdaTimeoutSeconds),
+      environment: {
+        PRODUCTS_TABLE_PRIMARY_KEY: productsTablePrimaryKey,
+        PRODUCTS_TABLE_NAME: productTable.tableName,
+        STOCKS_TABLE_PRIMARY_KEY: stocksTablePrimaryKey,
+        STOCKS_TABLE_NAME: stocksTable.tableName,
+      },
+    });
+
     const api = new apigateway.RestApi(this, 'ProductsApi', {
       deployOptions: {
         stageName: 'dev',
@@ -85,11 +99,17 @@ export class DeploymentStack extends cdk.Stack {
     productByIdResource.addMethod('GET', new apigateway.LambdaIntegration(getProductById), {
       authorizationType: apigateway.AuthorizationType.NONE,
     });
+    productResource.addMethod('POST', new apigateway.LambdaIntegration(createProduct), {
+      authorizationType: apigateway.AuthorizationType.NONE,
+    });
 
     productTable.grantReadData(getProductList);
     stocksTable.grantReadData(getProductList);
 
     productTable.grantReadData(getProductById);
     stocksTable.grantReadData(getProductById);
+
+    productTable.grantWriteData(createProduct);
+    stocksTable.grantWriteData(createProduct);
   }
 }
