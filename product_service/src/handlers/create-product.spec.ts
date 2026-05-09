@@ -9,6 +9,7 @@ import {
 
 import { createProductHandler } from "./create-product";
 import { APIGatewayProxyEvent } from "aws-lambda";
+import { fakeEventFields } from "../utils/fake-event";
 
 const ddbMock = mockClient(DynamoDBDocumentClient);
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -28,6 +29,8 @@ describe("create-product handler", () => {
     const successfulMessage = "Product created successfully";
 
     const event = {
+      ...fakeEventFields,
+      httpMethod: "POST",
       body: JSON.stringify({
         title: "Test Product",
         description: "A product for testing",
@@ -51,6 +54,8 @@ describe("create-product handler", () => {
   });
   it("should return 400 status code for invalid product data", async () => {
     const event = {
+      ...fakeEventFields,
+      httpMethod: "POST",
       body: JSON.stringify({
         title: "Test Product",
         description: "A product for testing",
@@ -71,6 +76,8 @@ describe("create-product handler", () => {
     ddbMock.on(TransactWriteCommand).rejects(new Error("Database error"));
 
     const event = {
+      ...fakeEventFields,
+      httpMethod: "POST",
       body: JSON.stringify({
         title: "Test Product",
         description: "A product for testing",

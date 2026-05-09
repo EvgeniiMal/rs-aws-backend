@@ -8,6 +8,8 @@ import {
 } from "@aws-sdk/lib-dynamodb";
 
 import { getProductList } from "./product-list";
+import { fakeEventFields } from "../utils/fake-event";
+import { APIGatewayProxyEvent } from "aws-lambda";
 
 const ddbMock = mockClient(DynamoDBDocumentClient);
 
@@ -24,7 +26,7 @@ describe("product-list handler", () => {
   it("should return products with count", async () => {
     ddbMock
       .on(ScanCommand, {
-        TableName: "products",
+        TableName: process.env.PRODUCTS_TABLE_NAME,
       })
       .resolves({
         Items: [
@@ -40,7 +42,7 @@ describe("product-list handler", () => {
       .on(BatchGetCommand)
       .resolves({
         Responses: {
-          stocks: [
+          [process.env.STOCKS_TABLE_NAME!]: [
             { product_id: "1", count: 5 },
             { product_id: "2", count: 10 },
             { product_id: "3", count: 15 },
@@ -50,7 +52,12 @@ describe("product-list handler", () => {
         },
       });
 
-    const result = await getProductList();
+    const mockEvent = {
+      ...fakeEventFields,
+      httpMethod: "GET",
+    } as unknown as APIGatewayProxyEvent;
+
+    const result = await getProductList(mockEvent);
 
     assert.equal(result.statusCode, 200);
 

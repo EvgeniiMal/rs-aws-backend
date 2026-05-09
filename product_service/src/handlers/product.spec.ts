@@ -3,11 +3,11 @@ import assert from "node:assert/strict";
 import { mockClient } from "aws-sdk-client-mock";
 import {
   DynamoDBDocumentClient,
-  ScanCommand,
-  BatchGetCommand,
   GetCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { getProduct } from "./product";
+import { fakeEventFields } from "../utils/fake-event";
+import { APIGatewayProxyEvent } from "aws-lambda";
 
 const ddbMock = mockClient(DynamoDBDocumentClient);
 
@@ -23,7 +23,11 @@ describe("product handler", () => {
 
   it("should return product with count", async () => {
     const productId = crypto.randomUUID();
-    const mockEvent = { pathParameters: { id: productId } } as unknown as AWSLambda.APIGatewayProxyEvent;
+    const mockEvent = {
+      ...fakeEventFields,
+      httpMethod: "GET",
+      pathParameters: { id: productId },
+    } as unknown as APIGatewayProxyEvent;
 
     ddbMock
       .on(GetCommand, {
@@ -61,7 +65,11 @@ describe("product handler", () => {
 
   it("should return 404 if product not found", async () => {
     const productId = crypto.randomUUID();
-    const mockEvent = { pathParameters: { id: productId } } as unknown as AWSLambda.APIGatewayProxyEvent;
+    const mockEvent = {
+      ...fakeEventFields,
+      httpMethod: "GET",
+      pathParameters: { id: productId },
+    } as unknown as APIGatewayProxyEvent;
 
     ddbMock
       .on(GetCommand, {
@@ -81,7 +89,11 @@ describe("product handler", () => {
   });
 
   it("should return 400 for invalid product id", async () => {
-    const mockEvent = { pathParameters: { id: "invalid-uuid" } } as unknown as AWSLambda.APIGatewayProxyEvent;
+    const mockEvent = {
+      ...fakeEventFields,
+      httpMethod: "GET",
+      pathParameters: { id: "invalid-uuid" },
+    } as unknown as APIGatewayProxyEvent;
 
     const result = await getProduct(mockEvent);
 
