@@ -14,6 +14,17 @@ const pathSchema = zod.object({
 export const getProduct = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
+  const { pathParameters, path, httpMethod, requestContext } = event;
+  const requestId = requestContext.requestId;
+
+  console.log({
+    msg: 'incoming request',
+    requestId,
+    method: httpMethod,
+    path,
+    pathParameters,
+  });
+
   const result = pathSchema.safeParse(event.pathParameters);
 
   if (!result.success) {

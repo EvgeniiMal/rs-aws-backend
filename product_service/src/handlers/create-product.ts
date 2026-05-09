@@ -17,7 +17,18 @@ const productDataSchema = zod.object({
 
 export const createProductHandler =
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+    const { requestContext, httpMethod, path } = event;
+    const requestId = requestContext.requestId;
     const requestBody = JSON.parse(event.body || "{}");
+
+    console.log({
+      msg: 'incoming request',
+      requestId,
+      method: httpMethod,
+      path,
+      body: requestBody
+    });
+
     const parseResult = productDataSchema.safeParse(requestBody);
 
     if (!parseResult.success) {

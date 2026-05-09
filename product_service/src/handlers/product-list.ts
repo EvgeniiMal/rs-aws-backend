@@ -1,4 +1,4 @@
-import { APIGatewayProxyResult } from "aws-lambda";
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { corsHeaders } from "../utils/cors-headers";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { BatchGetCommand, DynamoDBDocumentClient, ScanCommand } from "@aws-sdk/lib-dynamodb";
@@ -8,7 +8,16 @@ import { StockList } from "../types/stock";
 const client = new DynamoDBClient();
 const dynamoDb = DynamoDBDocumentClient.from(client);
 
-export const getProductList = async (): Promise<APIGatewayProxyResult> => {
+export const getProductList = async (event: APIGatewayProxyEvent):
+  Promise<APIGatewayProxyResult> => {
+  const { requestContext, httpMethod } = event;
+  const requestId = requestContext.requestId;
+
+  console.log({
+    msg: 'incoming request',
+    requestId,
+    method: httpMethod,
+  });
 
   try {
     const productsResult = await dynamoDb.send(
