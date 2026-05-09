@@ -11,6 +11,7 @@ import { createProductHandler } from "./create-product";
 import { APIGatewayProxyEvent } from "aws-lambda";
 
 const ddbMock = mockClient(DynamoDBDocumentClient);
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 describe("create-product handler", () => {
   beforeEach(() => {
@@ -24,10 +25,12 @@ describe("create-product handler", () => {
 
   it("should create a product and return 201 status code", async () => {
     ddbMock.on(TransactWriteCommand).resolves({});
+    const successfulMessage = "Product created successfully";
 
     const event = {
       body: JSON.stringify({
-        name: "Test Product",
+        title: "Test Product",
+        description: "A product for testing",
         price: 100,
         count: 10,
       }),
@@ -36,14 +39,21 @@ describe("create-product handler", () => {
     const result = await createProductHandler(event as unknown as APIGatewayProxyEvent);
 
     assert.equal(result.statusCode, 201);
-    assert.deepEqual(JSON.parse(result.body), {
-      message: "Product created successfully",
-    });
+    const responseBody = JSON.parse(result.body);
+    assert.ok(responseBody.id);
+    assert.ok(responseBody.message);
+
+    const { id, message } = responseBody;
+
+    assert.match(id, UUID_REGEX);
+    assert.equal(message, successfulMessage);
+
   });
   it("should return 400 status code for invalid product data", async () => {
     const event = {
       body: JSON.stringify({
-        name: "Test Product",
+        title: "Test Product",
+        description: "A product for testing",
         price: "invalid_price",
         count: 10,
       }),
@@ -62,7 +72,8 @@ describe("create-product handler", () => {
 
     const event = {
       body: JSON.stringify({
-        name: "Test Product",
+        title: "Test Product",
+        description: "A product for testing",
         price: 100,
         count: 10,
       }),
