@@ -2,17 +2,18 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import zod from "zod";
 import { corsHeaders } from "../utils/cors-headers";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, PutCommand, TransactWriteCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, TransactWriteCommand } from "@aws-sdk/lib-dynamodb";
+import { CreateProduct } from "../types/product";
 
 const client = new DynamoDBClient();
 const dynamoDb = DynamoDBDocumentClient.from(client);
 
-
 const productDataSchema = zod.object({
-  name: zod.string(),
+  title: zod.string(),
+  description: zod.string(),
   price: zod.number(),
   count: zod.number(),
-});
+}).strict() satisfies zod.ZodType<CreateProduct>;
 
 export const createProductHandler =
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
@@ -36,6 +37,8 @@ export const createProductHandler =
     const product = parseResult.data;
     const productId = crypto.randomUUID();
 
+    const { title, description, price, count } = product;
+
     try {
       await dynamoDb.send(
         new TransactWriteCommand({
@@ -45,8 +48,9 @@ export const createProductHandler =
                 TableName: process.env.PRODUCTS_TABLE_NAME!,
                 Item: {
                   id: productId,
-                  name: product.name,
-                  price: product.price,
+                  title,
+                  description,
+                  price,
                 },
               },
             },
@@ -55,7 +59,7 @@ export const createProductHandler =
                 TableName: process.env.STOCKS_TABLE_NAME!,
                 Item: {
                   product_id: productId,
-                  count: product.count,
+                  count,
                 },
               },
             },
@@ -68,7 +72,7 @@ export const createProductHandler =
       return {
         statusCode: 201,
         headers: corsHeaders,
-        body: JSON.stringify({ message: "Product created successfully" }),
+        body: JSON.stringify({ id: productId, message: "Product created successfully" }),
       };
     } catch (error) {
       console.error("Error creating product:", error);
