@@ -2,6 +2,8 @@ import { APIGatewayProxyResult } from "aws-lambda";
 import { corsHeaders } from "../utils/cors-headers";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { BatchGetCommand, DynamoDBDocumentClient, ScanCommand } from "@aws-sdk/lib-dynamodb";
+import { Product, ProductItemsList } from "../types/product";
+import { StockList } from "../types/stock";
 
 const client = new DynamoDBClient();
 const dynamoDb = DynamoDBDocumentClient.from(client);
@@ -14,7 +16,7 @@ export const getProductList = async (): Promise<APIGatewayProxyResult> => {
         TableName: process.env.PRODUCTS_TABLE_NAME,
       })
     )
-    const products = productsResult.Items ?? [];
+    const products = productsResult.Items as Product[] ?? [];
 
     console.log(`Products query: ${products.length} product items received from DynamoDB`);
 
@@ -26,27 +28,27 @@ export const getProductList = async (): Promise<APIGatewayProxyResult> => {
       };
     }
 
-    const productIds = products.map((product) => product[process.env.PRODUCTS_TABLE_PRIMARY_KEY!]);
-    
+    const productIds = products.map((product) => product.id);
+
 
     const stocksResult = await dynamoDb.send(
       new BatchGetCommand({
         RequestItems: {
           [process.env.STOCKS_TABLE_NAME!]: {
             Keys: productIds.map((id) => ({
-              [process.env.STOCKS_TABLE_PRIMARY_KEY!]: id,
+              product_id: id,
             })),
           },
         },
       })
     )
 
-    const stocks = stocksResult?.Responses?.[process.env.STOCKS_TABLE_NAME!] ?? [];
+    const stocks = stocksResult?.Responses?.[process.env.STOCKS_TABLE_NAME!] as StockList ?? [];
 
     console.log(`Stocks query: ${stocks.length} stock items received from DynamoDB`);
 
-    const fullProducts = products.map((product) => {
-      const stock = stocks.find((s) => s[process.env.STOCKS_TABLE_PRIMARY_KEY!] === product[process.env.PRODUCTS_TABLE_PRIMARY_KEY!]);
+    const fullProducts: ProductItemsList = products.map((product) => {
+      const stock = stocks.find((s) => s.product_id === product.id);
       return {
         ...product,
         count: stock ? stock.count : 0,
