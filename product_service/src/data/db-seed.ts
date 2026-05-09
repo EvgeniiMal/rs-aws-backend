@@ -1,5 +1,6 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { BatchWriteCommand, DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
+import { Product } from "../types/product";
 
 
 const REGION = process.env.AWS_REGION || "eu-west-1";
@@ -16,7 +17,7 @@ console.log({
 const client = new DynamoDBClient({ region: REGION });
 const docClient = DynamoDBDocumentClient.from(client);
 
-const createRandomProduct = () => {
+const createRandomProduct = (): Product => {
   const id = crypto.randomUUID();
   return {
     id,
