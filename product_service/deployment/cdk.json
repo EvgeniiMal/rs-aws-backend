@@ -17,6 +17,13 @@
     ]
   },
   "context": {
+    "serviceContext": {
+      "lambdaTimeoutSeconds": 10,
+      "productsTablePrimaryKey": "id",
+      "productsTableName": "products",
+      "stocksTablePrimaryKey": "product_id",
+      "stocksTableName": "stocks"
+    },
     "@aws-cdk/aws-signer:signingProfileNamePassedToCfn": true,
     "@aws-cdk/aws-ecs-patterns:secGroupsDisablesImplicitOpenListener": true,
     "@aws-cdk/aws-lambda:recognizeLayerVersion": true,

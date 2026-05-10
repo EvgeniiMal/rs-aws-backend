@@ -4,7 +4,7 @@ info:
   version: 1.0.0
 
 servers:
-  - url: https://79ngk4sfs8.execute-api.eu-west-1.amazonaws.com/dev/products
+  - url: https://37yguasxvd.execute-api.eu-west-1.amazonaws.com/dev
     description: Dev environment
 
 paths:
@@ -22,6 +22,27 @@ paths:
                   $ref: '#/components/schemas/Product'
         '500':
           description: Could not load products
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Create a new product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProduct'
+      responses:
+        '201':
+          description: Product created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateProduct'
+        '400':
+          description: Invalid input
           content:
             application/json:
               schema:
@@ -53,22 +74,33 @@ paths:
 
 components:
   schemas:
-    Product:
+    ProductBase:
       type: object
       required:
-        - id
-        - name
+        - title
         - price
         - description
+        - count
       properties:
-        id:
+        title:
           type: string
-        name:
+        description:
           type: string
         price:
           type: number
-        description:
+        count:
           type: string
+    Product:
+      allOf:
+        - $ref: '#/components/schemas/ProductBase'
+        - type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+    CreateProduct:
+      $ref: '#/components/schemas/ProductBase'
     ErrorResponse:
       type: object
       required:

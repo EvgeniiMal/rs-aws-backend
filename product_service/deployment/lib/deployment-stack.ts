@@ -1,27 +1,52 @@
 import * as cdk from 'aws-cdk-lib/core';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { Construct } from 'constructs';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import path from 'path';
+import { getContext } from '../utils/context';
 
 const PROJECT_ROOT = path.resolve(__dirname, '../../');
 const SRC_DIR = path.resolve(PROJECT_ROOT, 'src');
 const HANDLERS_DIR = path.resolve(SRC_DIR, 'handlers');
-
-const LAMBDA_TIMEOUT_SECONDS = 10;
 const DEFAULT_RUNTIME = lambda.Runtime.NODEJS_24_X;
 
 export class DeploymentStack extends cdk.Stack {
+
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
+
+    const context = getContext(this);
+
+    const {
+      lambdaTimeoutSeconds,
+      productsTablePrimaryKey,
+      productsTableName,
+      stocksTablePrimaryKey,
+      stocksTableName,
+    } = context;
+
+    const productTable = dynamodb.Table.fromTableName(
+      this, 'ProductTable', productsTableName
+    );
+
+    const stocksTable = dynamodb.Table.fromTableName(
+      this, 'StocksTable', stocksTableName
+    );
 
     const getProductList = new NodejsFunction(this, 'GetProductList', {
       projectRoot: PROJECT_ROOT,
       entry: path.resolve(HANDLERS_DIR, 'product-list.ts'),
       handler: 'getProductList',
       runtime: DEFAULT_RUNTIME,
-      timeout: cdk.Duration.seconds(LAMBDA_TIMEOUT_SECONDS),
+      timeout: cdk.Duration.seconds(lambdaTimeoutSeconds),
+      environment: {
+        PRODUCTS_TABLE_PRIMARY_KEY: productsTablePrimaryKey,
+        PRODUCTS_TABLE_NAME: productTable.tableName,
+        STOCKS_TABLE_PRIMARY_KEY: stocksTablePrimaryKey,
+        STOCKS_TABLE_NAME: stocksTable.tableName,
+      },
     });
 
     const getProductById = new NodejsFunction(this, 'GetProductById', {
@@ -29,7 +54,27 @@ export class DeploymentStack extends cdk.Stack {
       entry: path.resolve(HANDLERS_DIR, 'product.ts'),
       handler: 'getProduct',
       runtime: DEFAULT_RUNTIME,
-      timeout: cdk.Duration.seconds(LAMBDA_TIMEOUT_SECONDS),
+      timeout: cdk.Duration.seconds(lambdaTimeoutSeconds),
+      environment: {
+        PRODUCTS_TABLE_PRIMARY_KEY: productsTablePrimaryKey,
+        PRODUCTS_TABLE_NAME: productTable.tableName,
+        STOCKS_TABLE_PRIMARY_KEY: stocksTablePrimaryKey,
+        STOCKS_TABLE_NAME: stocksTable.tableName,
+      },
+    });
+
+    const createProduct = new NodejsFunction(this, 'CreateProduct', {
+      projectRoot: PROJECT_ROOT,
+      entry: path.resolve(HANDLERS_DIR, 'create-product.ts'),
+      handler: 'createProductHandler',
+      runtime: DEFAULT_RUNTIME,
+      timeout: cdk.Duration.seconds(lambdaTimeoutSeconds),
+      environment: {
+        PRODUCTS_TABLE_PRIMARY_KEY: productsTablePrimaryKey,
+        PRODUCTS_TABLE_NAME: productTable.tableName,
+        STOCKS_TABLE_PRIMARY_KEY: stocksTablePrimaryKey,
+        STOCKS_TABLE_NAME: stocksTable.tableName,
+      },
     });
 
     const api = new apigateway.RestApi(this, 'ProductsApi', {
@@ -54,5 +99,17 @@ export class DeploymentStack extends cdk.Stack {
     productByIdResource.addMethod('GET', new apigateway.LambdaIntegration(getProductById), {
       authorizationType: apigateway.AuthorizationType.NONE,
     });
+    productResource.addMethod('POST', new apigateway.LambdaIntegration(createProduct), {
+      authorizationType: apigateway.AuthorizationType.NONE,
+    });
+
+    productTable.grantReadData(getProductList);
+    stocksTable.grantReadData(getProductList);
+
+    productTable.grantReadData(getProductById);
+    stocksTable.grantReadData(getProductById);
+
+    productTable.grantWriteData(createProduct);
+    stocksTable.grantWriteData(createProduct);
   }
 }
