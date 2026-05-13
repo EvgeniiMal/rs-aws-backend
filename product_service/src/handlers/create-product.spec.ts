@@ -71,6 +71,76 @@ describe("create-product handler", () => {
       error: "Invalid product data",
     });
   });
+  it("should return 400 status code for missing product data", async () => {
+    const event = {
+      ...fakeEventFields,
+      httpMethod: "POST",
+      body: JSON.stringify({
+        title: "Test Product",
+        description: "A product for testing",
+        price: 100,
+      }),
+    };
+
+    const result = await createProductHandler(event as unknown as APIGatewayProxyEvent);
+
+    assert.equal(result.statusCode, 400);
+    assert.deepEqual(JSON.parse(result.body), {
+      error: "Invalid product data",
+    });
+  });
+  it("should return 400 status code for invalid JSON in request body", async () => {
+    const event = {
+      ...fakeEventFields,
+      httpMethod: "POST",
+      body: "{title: 'Test Product',description: 'A product for testing',price: 100count: 10,}",
+    };
+
+    const result = await createProductHandler(event as unknown as APIGatewayProxyEvent);
+
+    assert.equal(result.statusCode, 400);
+    assert.deepEqual(JSON.parse(result.body), {
+      error: "Invalid JSON in request body",
+    });
+  });
+  it("should return 400 status code for negative price and count", async () => {
+    const event = {
+      ...fakeEventFields,
+      httpMethod: "POST",
+      body: JSON.stringify({
+        title: "Test Product",
+        description: "A product for testing",
+        price: -100,
+        count: -10,
+      }),
+    };
+
+    const result = await createProductHandler(event as unknown as APIGatewayProxyEvent);
+
+    assert.equal(result.statusCode, 400);
+    assert.deepEqual(JSON.parse(result.body), {
+      error: "Invalid product data",
+    });
+  });
+  it("should return 400 status code for non-integer count", async () => {
+    const event = {
+      ...fakeEventFields,
+      httpMethod: "POST",
+      body: JSON.stringify({
+        title: "Test Product",
+        description: "A product for testing",
+        price: 100,
+        count: 10.5,
+      }),
+    };
+
+    const result = await createProductHandler(event as unknown as APIGatewayProxyEvent);
+
+    assert.equal(result.statusCode, 400);
+    assert.deepEqual(JSON.parse(result.body), {
+      error: "Invalid product data",
+    });
+  });
 
   it("should return 500 status code for database errors", async () => {
     ddbMock.on(TransactWriteCommand).rejects(new Error("Database error"));
