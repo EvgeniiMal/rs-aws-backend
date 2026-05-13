@@ -11,23 +11,36 @@ const dynamoDb = DynamoDBDocumentClient.from(client);
 const productDataSchema = zod.object({
   title: zod.string(),
   description: zod.string(),
-  price: zod.number(),
-  count: zod.number(),
+  price: zod.number().positive(),
+  count: zod.number().positive().int(),
 }).strict() satisfies zod.ZodType<CreateProduct>;
 
 export const createProductHandler =
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     const { requestContext, httpMethod, path } = event;
     const requestId = requestContext.requestId;
-    const requestBody = JSON.parse(event.body || "{}");
 
     console.log({
       msg: 'incoming request',
       requestId,
       method: httpMethod,
       path,
-      body: requestBody
+      body: event.body,
     });
+
+    let requestBody: unknown;
+    try {
+      requestBody = JSON.parse(event.body || "{}");
+    } catch (error) {
+      console.warn("Invalid JSON in request body:", error);
+      return {
+        statusCode: 400,
+        headers: corsHeaders,
+        body: JSON.stringify({
+          error: "Invalid JSON in request body",
+        }),
+      };
+    }
 
     const parseResult = productDataSchema.safeParse(requestBody);
 
