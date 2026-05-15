@@ -17,6 +17,11 @@
     ]
   },
   "context": {
+    "serviceContext": {
+      "stage": "dev",
+      "productsBucketName": "aws-shop-file-storage",
+      "uploadPrefix": "uploaded"
+    },
     "@aws-cdk/aws-signer:signingProfileNamePassedToCfn": true,
     "@aws-cdk/aws-ecs-patterns:secGroupsDisablesImplicitOpenListener": true,
     "@aws-cdk/aws-lambda:recognizeLayerVersion": true,
