@@ -1,6 +1,7 @@
 import { aws_apigatewayv2 as apigV2 } from 'aws-cdk-lib';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
 import * as cdk from 'aws-cdk-lib/core';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
@@ -34,6 +35,14 @@ export class ImportServiceStack extends cdk.Stack {
       },
     });
 
+    const parseFileLambda = new NodejsFunction(
+      this, 'ParseFileLambda', {
+      projectRoot: PROJECT_ROOT,
+      entry: path.join(HANDLERS_DIR, 'file-parser.ts'),
+      handler: 'fileParser',
+      runtime: DEFAULT_RUNTIME,
+    });
+
     const importProductsFileIntegration = new HttpLambdaIntegration(
       'ImportProductsFileIntegration',
       importProductsFileLambda,
@@ -60,6 +69,14 @@ export class ImportServiceStack extends cdk.Stack {
     });
 
     productsBucket.grantPut(importProductsFileLambda);
+    productsBucket.addEventNotification(
+      s3.EventType.OBJECT_CREATED,
+      new s3n.LambdaDestination(
+        parseFileLambda
+      ),
+      { prefix: `${uploadPrefix}/` }
+    );
+
 
     new cdk.CfnOutput(this, 'ImportServiceApiUrl', {
       value: `${api.apiEndpoint}/import`,
