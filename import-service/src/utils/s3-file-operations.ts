@@ -6,6 +6,10 @@ const s3Client = new S3Client({
   region: process.env.AWS_REGION,
 });
 
+const encodeS3CopySource = (bucket: string, key: string) => {
+  return `${bucket}/${encodeURIComponent(key)}`;
+};
+
 const logAndThrowError = (message: string, error: unknown) => {
   console.error(message, error);
   if (error instanceof Error) {
@@ -20,7 +24,7 @@ export const copyFile = async (sourceKey: string, destinationKey: string, bucket
   try {
     await s3Client.send(new CopyObjectCommand({
       Bucket: bucket,
-      CopySource: `${bucket}/${sourceKey}`,
+      CopySource: encodeS3CopySource(bucket, sourceKey),
       Key: destinationKey,
     }));
     console.log(`File copied to '${destinationKey}' in bucket '${bucket}'.`);

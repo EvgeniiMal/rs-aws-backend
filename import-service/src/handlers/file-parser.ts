@@ -52,7 +52,7 @@ export const fileParser = async (event: S3Event) => {
     console.log(`Finished processing file from S3 ${bucketName}/${objectKey}.`);
 
     await copyFile(
-      `${bucketName}/${objectKey}`,
+      objectKey,
       `${PROCESSED_DIRECTORY}${fileName}`,
       bucketName);
     await deleteFile(objectKey, bucketName);

@@ -69,6 +69,7 @@ export class ImportServiceStack extends cdk.Stack {
     });
 
     productsBucket.grantPut(importProductsFileLambda);
+    productsBucket.grantReadWrite(parseFileLambda);
     productsBucket.addEventNotification(
       s3.EventType.OBJECT_CREATED,
       new s3n.LambdaDestination(
