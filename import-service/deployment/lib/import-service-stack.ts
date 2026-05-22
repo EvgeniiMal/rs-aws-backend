@@ -75,7 +75,7 @@ export class ImportServiceStack extends cdk.Stack {
       new s3n.LambdaDestination(
         parseFileLambda
       ),
-      { prefix: `${uploadPrefix}/` }
+      { prefix: `${uploadPrefix}/`, suffix: '.csv' }
     );
 
 
