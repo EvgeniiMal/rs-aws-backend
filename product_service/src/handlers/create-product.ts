@@ -1,19 +1,9 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import zod from "zod";
 import { corsHeaders } from "../utils/cors-headers";
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, TransactWriteCommand } from "@aws-sdk/lib-dynamodb";
+import zod from "zod";
 import { CreateProduct } from "../types/product";
+import createProduct from "../service/create-product";
 
-const client = new DynamoDBClient();
-const dynamoDb = DynamoDBDocumentClient.from(client);
-
-const productDataSchema = zod.object({
-  title: zod.string(),
-  description: zod.string(),
-  price: zod.number(),
-  count: zod.number(),
-}).strict() satisfies zod.ZodType<CreateProduct>;
 
 export const createProductHandler =
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
@@ -28,6 +18,13 @@ export const createProductHandler =
       path,
       body: requestBody
     });
+
+    const productDataSchema = zod.object({
+      title: zod.string(),
+      description: zod.string(),
+      price: zod.number(),
+      count: zod.number(),
+    }).strict() satisfies zod.ZodType<CreateProduct>;
 
     const parseResult = productDataSchema.safeParse(requestBody);
 
@@ -46,37 +43,17 @@ export const createProductHandler =
     }
 
     const product = parseResult.data;
-    const productId = crypto.randomUUID();
+
 
     const { title, description, price, count } = product;
 
     try {
-      await dynamoDb.send(
-        new TransactWriteCommand({
-          TransactItems: [
-            {
-              Put: {
-                TableName: process.env.PRODUCTS_TABLE_NAME!,
-                Item: {
-                  id: productId,
-                  title,
-                  description,
-                  price,
-                },
-              },
-            },
-            {
-              Put: {
-                TableName: process.env.STOCKS_TABLE_NAME!,
-                Item: {
-                  product_id: productId,
-                  count,
-                },
-              },
-            },
-          ],
-        })
-      );
+      const productId = await createProduct({
+        title,
+        description,
+        price,
+        count,
+      });
 
       console.info(`Product created successfully: ${productId}`);
 
