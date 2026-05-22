@@ -2,6 +2,8 @@ import * as cdk from 'aws-cdk-lib/core';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import * as sqs from 'aws-cdk-lib/aws-sqs';
+import * as eventsources from 'aws-cdk-lib/aws-lambda-event-sources';
 import { Construct } from 'constructs';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import path from 'path';
@@ -34,6 +36,34 @@ export class DeploymentStack extends cdk.Stack {
     const stocksTable = dynamodb.Table.fromTableName(
       this, 'StocksTable', stocksTableName
     );
+
+
+    const catalogItemsQueue = new sqs.Queue(this, 'CatalogItemsQueue', {
+      queueName: 'catalogItemsQueue',
+    });
+
+    const catalogItemsEventSource = new eventsources.SqsEventSource(catalogItemsQueue, {
+      batchSize: 5,
+    });
+
+
+    const catalogBatchProcess = new NodejsFunction(this, 'CatalogBatchProcess', {
+      projectRoot: PROJECT_ROOT,
+      entry: path.resolve(HANDLERS_DIR, 'catalog-batch-process.ts'),
+      handler: 'catalogBatchProcess',
+      runtime: DEFAULT_RUNTIME,
+      timeout: cdk.Duration.seconds(lambdaTimeoutSeconds),
+      environment: {
+        CATALOG_ITEMS_QUEUE_URL: catalogItemsQueue.queueUrl,
+        PRODUCTS_TABLE_PRIMARY_KEY: productsTablePrimaryKey,
+        PRODUCTS_TABLE_NAME: productTable.tableName,
+        STOCKS_TABLE_PRIMARY_KEY: stocksTablePrimaryKey,
+        STOCKS_TABLE_NAME: stocksTable.tableName,
+      },
+    });
+
+
+    catalogBatchProcess.addEventSource(catalogItemsEventSource);
 
     const getProductList = new NodejsFunction(this, 'GetProductList', {
       projectRoot: PROJECT_ROOT,
@@ -111,5 +141,10 @@ export class DeploymentStack extends cdk.Stack {
 
     productTable.grantWriteData(createProduct);
     stocksTable.grantWriteData(createProduct);
+
+    productTable.grantReadWriteData(catalogBatchProcess);
+    stocksTable.grantReadWriteData(catalogBatchProcess);
+
+    catalogItemsQueue.grantConsumeMessages(catalogBatchProcess);
   }
 }
