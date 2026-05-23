@@ -47,8 +47,9 @@ export const fileParser = async (event: S3Event) => {
 
     await new Promise<void>((resolve, reject) => {
       stream
-        .pipe(csv())
+        .pipe(csv({ separator: ';' }))
         .on('data', (data) => {
+          console.log('Parsed CSV row: ', data);
           const message = JSON.stringify(data);
           messagePromises.push(sendSqsMessage(message));
         })
