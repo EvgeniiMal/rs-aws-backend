@@ -50,6 +50,7 @@ export class ImportServiceStack extends cdk.Stack {
       entry: path.join(HANDLERS_DIR, 'file-parser.ts'),
       handler: 'fileParser',
       runtime: DEFAULT_RUNTIME,
+      timeout: cdk.Duration.seconds(30),
       environment: {
         CATALOG_ITEMS_QUEUE_URL: catalogItemsQueue.queueUrl,
       },
