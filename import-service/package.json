@@ -1,0 +1,27 @@
+{
+  "name": "import_service",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "cdk:synth": "cd deployment && cdk synth",
+    "cdk:deploy": "cd deployment && cdk deploy",
+    "cdk:destroy": "cd deployment && cdk destroy",
+    "test": "node --import tsx --test \"src/**/*.spec.ts\""
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.161",
+    "@types/node": "^25.6.0",
+    "aws-sdk-client-mock": "^4.1.0",
+    "esbuild": "^0.28.0",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.3"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1041.0",
+    "@aws-sdk/client-s3": "^3.1045.0",
+    "@aws-sdk/lib-dynamodb": "^3.1041.0",
+    "@aws-sdk/s3-request-presigner": "^3.1045.0",
+    "csv-parser": "^3.2.1",
+    "zod": "^4.4.3"
+  }
+}
