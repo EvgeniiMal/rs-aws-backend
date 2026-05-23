@@ -146,5 +146,15 @@ export class DeploymentStack extends cdk.Stack {
     stocksTable.grantReadWriteData(catalogBatchProcess);
 
     catalogItemsQueue.grantConsumeMessages(catalogBatchProcess);
+
+    new cdk.CfnOutput(this, 'CatalogItemsQueueExport', {
+      value: catalogItemsQueue.queueUrl,
+      exportName: 'CatalogItemsQueueUrl',
+    });
+
+    new cdk.CfnOutput(this, 'CatalogItemsQueueArnExport', {
+      value: catalogItemsQueue.queueArn,
+      exportName: 'CatalogItemsQueueArn',
+    });
   }
 }

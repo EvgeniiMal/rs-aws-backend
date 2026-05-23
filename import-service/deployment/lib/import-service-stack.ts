@@ -4,6 +4,7 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
 import * as cdk from 'aws-cdk-lib/core';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { Construct } from 'constructs';
 import path from 'path';
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
@@ -23,6 +24,14 @@ export class ImportServiceStack extends cdk.Stack {
       this, 'ProductsBucket', productsBucketName
     );
 
+    const catalogItemsQueueUrl = cdk.Fn.importValue('CatalogItemsQueueUrl');
+    const catalogItemsQueueArn = cdk.Fn.importValue('CatalogItemsQueueArn');
+
+    const catalogItemsQueue = sqs.Queue.fromQueueAttributes(this, 'CatalogItemsQueue', {
+      queueUrl: catalogItemsQueueUrl,
+      queueArn: catalogItemsQueueArn,
+    });
+
     const importProductsFileLambda = new NodejsFunction(
       this, 'ImportProductsFileLambda', {
       projectRoot: PROJECT_ROOT,
@@ -41,6 +50,9 @@ export class ImportServiceStack extends cdk.Stack {
       entry: path.join(HANDLERS_DIR, 'file-parser.ts'),
       handler: 'fileParser',
       runtime: DEFAULT_RUNTIME,
+      environment: {
+        CATALOG_ITEMS_QUEUE_URL: catalogItemsQueue.queueUrl,
+      },
     });
 
     const importProductsFileIntegration = new HttpLambdaIntegration(
@@ -78,11 +90,13 @@ export class ImportServiceStack extends cdk.Stack {
       { prefix: `${uploadPrefix}/`, suffix: '.csv' }
     );
 
+    catalogItemsQueue.grantSendMessages(parseFileLambda);
 
     new cdk.CfnOutput(this, 'ImportServiceApiUrl', {
       value: `${api.apiEndpoint}/import`,
       description: 'Import Service API endpoint',
       exportName: `${stage}-ImportServiceApiUrl`,
     });
+
   }
 }
