@@ -21,7 +21,7 @@ export default async function createProduct(product: CreateProduct) {
               id: productId,
               title,
               description,
-              price,
+              price: +price,
             },
           },
         },
@@ -30,7 +30,7 @@ export default async function createProduct(product: CreateProduct) {
             TableName: process.env.STOCKS_TABLE_NAME!,
             Item: {
               product_id: productId,
-              count,
+              count: +count,
             },
           },
         },
