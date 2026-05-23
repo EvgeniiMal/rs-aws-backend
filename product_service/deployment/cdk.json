@@ -22,7 +22,9 @@
       "productsTablePrimaryKey": "id",
       "productsTableName": "products",
       "stocksTablePrimaryKey": "product_id",
-      "stocksTableName": "stocks"
+      "stocksTableName": "stocks",
+      "inStockProductsEmail": "",
+      "outOfStockProductsEmail": ""
     },
     "@aws-cdk/aws-signer:signingProfileNamePassedToCfn": true,
     "@aws-cdk/aws-ecs-patterns:secGroupsDisablesImplicitOpenListener": true,
