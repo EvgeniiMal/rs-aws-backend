@@ -5,22 +5,28 @@ import {
   DynamoDBDocumentClient,
   TransactWriteCommand,
 } from "@aws-sdk/lib-dynamodb";
+import { SNSClient, PublishCommand } from "@aws-sdk/client-sns";
 import { catalogBatchProcess } from "./catalog-batch-process";
 import { SQSEvent } from "aws-lambda";
 
 const ddbMock = mockClient(DynamoDBDocumentClient);
+const snsMock = mockClient(SNSClient);
 
 test("should process all SQS records", async () => {
   ddbMock.reset();
+  snsMock.reset();
 
   process.env.PRODUCTS_TABLE_NAME = "products";
   process.env.STOCKS_TABLE_NAME = "stocks";
+  process.env.PRODUCTS_CREATED_TOPIC_ARN = "arn:aws:sns:eu-north-1:123456789012:productsCreatedTopic";
+  process.env.AWS_REGION = "eu-north-1";
 
   const ids = ["product-1", "product-2"];
   let idIndex = 0;
   const randomUuidMock = mock.method(crypto, "randomUUID", () => ids[idIndex++]!);
 
   ddbMock.on(TransactWriteCommand).resolves({});
+  snsMock.on(PublishCommand).resolves({ MessageId: "test-message-id" });
 
   const event: SQSEvent = {
     Records: [

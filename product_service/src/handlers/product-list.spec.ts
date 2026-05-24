@@ -4,7 +4,6 @@ import { mockClient } from "aws-sdk-client-mock";
 import {
   DynamoDBDocumentClient,
   ScanCommand,
-  BatchGetCommand,
 } from "@aws-sdk/lib-dynamodb";
 
 import { getProductList } from "./product-list";
@@ -39,17 +38,15 @@ describe("product-list handler", () => {
       });
 
     ddbMock
-      .on(BatchGetCommand)
+      .on(ScanCommand, { TableName: process.env.STOCKS_TABLE_NAME })
       .resolves({
-        Responses: {
-          [process.env.STOCKS_TABLE_NAME!]: [
-            { product_id: "1", count: 5 },
-            { product_id: "2", count: 10 },
-            { product_id: "3", count: 15 },
-            { product_id: "4", count: 20 },
-            { product_id: "5", count: 25 },
-          ],
-        },
+        Items: [
+          { product_id: "1", count: 5 },
+          { product_id: "2", count: 10 },
+          { product_id: "3", count: 15 },
+          { product_id: "4", count: 20 },
+          { product_id: "5", count: 25 },
+        ],
       });
 
     const mockEvent = {

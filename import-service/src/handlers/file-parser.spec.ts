@@ -4,9 +4,11 @@ import { S3Event } from "aws-lambda";
 import { fileParser } from "./file-parser";
 import { Readable } from "node:stream";
 import { CopyObjectCommand, DeleteObjectCommand, GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
 import { mockClient } from "aws-sdk-client-mock";
 
 const s3Mock = mockClient(S3Client);
+const sqsMock = mockClient(SQSClient);
 const mockEvent = {
   Records: [
     {
@@ -25,6 +27,8 @@ const mockEvent = {
 describe("fileParser", () => {
   beforeEach(() => {
     s3Mock.reset();
+    sqsMock.reset();
+    sqsMock.on(SendMessageCommand).resolves({ MessageId: 'test-message-id' });
   });
 
   it('should process the S3 event and parse the CSV file', async () => {
