@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { corsHeaders } from "../utils/cors-headers";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { BatchGetCommand, DynamoDBDocumentClient, ScanCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, ScanCommand } from "@aws-sdk/lib-dynamodb";
 import { Product, ProductItemsList } from "../types/product";
 import { StockList } from "../types/stock";
 
@@ -37,22 +37,13 @@ export const getProductList = async (event: APIGatewayProxyEvent):
       };
     }
 
-    const productIds = products.map((product) => product.id);
-
-
     const stocksResult = await dynamoDb.send(
-      new BatchGetCommand({
-        RequestItems: {
-          [process.env.STOCKS_TABLE_NAME!]: {
-            Keys: productIds.map((id) => ({
-              product_id: id,
-            })),
-          },
-        },
+      new ScanCommand({
+        TableName: process.env.STOCKS_TABLE_NAME,
       })
-    )
+    );
 
-    const stocks = stocksResult?.Responses?.[process.env.STOCKS_TABLE_NAME!] as StockList ?? [];
+    const stocks = stocksResult.Items as StockList ?? [];
 
     console.log(`Stocks query: ${stocks.length} stock items received from DynamoDB`);
 
