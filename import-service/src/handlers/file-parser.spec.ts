@@ -64,4 +64,36 @@ describe("fileParser", () => {
       assert.equal(s3Mock.commandCalls(CopyObjectCommand).length, 1);
       assert.equal(s3Mock.commandCalls(DeleteObjectCommand).length, 1);
     });
+
+  it('should send messages to SQS for each parsed CSV row', async () => {
+    const csvStream = Readable.from([
+      'title,description,price,count\n',
+      'Test product 1,Some description 1,10,5\n',
+      'Test product 2,Some description 2,20,10\n',
+    ]);
+
+    s3Mock.on(GetObjectCommand).resolves({
+      Body: csvStream,
+    } as any);
+
+    await fileParser(mockEvent);
+
+    assert.equal(sqsMock.commandCalls(SendMessageCommand).length, 2);
+  });
+
+  it('should handle CSV files with both comma and semicolon delimiters', async () => {
+    const csvStream = Readable.from([
+      'title,description,price,count\n',
+      'Test product 1,Some description 1,10,5\n',
+      'Test product 2;Some description 2;20;10\n',
+    ]);
+
+    s3Mock.on(GetObjectCommand).resolves({
+      Body: csvStream,
+    } as any);
+
+    await fileParser(mockEvent);
+
+    assert.equal(sqsMock.commandCalls(SendMessageCommand).length, 2);
+  });
 });
