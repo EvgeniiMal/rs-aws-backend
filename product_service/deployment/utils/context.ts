@@ -6,6 +6,8 @@ type ProductServiceContext = {
   productsTableName: string;
   stocksTablePrimaryKey: string;
   stocksTableName: string;
+  inStockProductsEmail: string;
+  outOfStockProductsEmail: string;
 };
 
 const CONTEXT_KEY = "serviceContext";
