@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "cdk:synth": "cd deployment && cdk synth",
+    "cdk:deploy": "cd deployment && cdk deploy",
+    "cdk:destroy": "cd deployment && cdk destroy",
+    "test": "node --import tsx --test \"src/**/*.spec.ts\""
   },
   "keywords": [],
   "author": "",
