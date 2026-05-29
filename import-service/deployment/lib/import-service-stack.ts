@@ -67,7 +67,7 @@ export class ImportServiceStack extends cdk.Stack {
       apiName: 'Import Service API',
       description: 'API for importing product files',
       corsPreflight: {
-        allowHeaders: ['Content-Type'],
+        allowHeaders: ['Content-Type', 'Authorization'],
         allowMethods: [
           apigV2.CorsHttpMethod.GET,
           apigV2.CorsHttpMethod.OPTIONS,
@@ -88,7 +88,7 @@ export class ImportServiceStack extends cdk.Stack {
       'BasicAuthorizer',
       basicAuthorizerLambda,
       {
-        responseTypes: [HttpLambdaResponseType.SIMPLE],
+        responseTypes: [HttpLambdaResponseType.IAM],
         identitySource: ['$request.header.Authorization'],
       }
     )
