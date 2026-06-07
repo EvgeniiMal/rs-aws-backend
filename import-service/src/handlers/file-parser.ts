@@ -1,7 +1,7 @@
 import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { S3Event } from "aws-lambda";
 import csv from "csv-parser";
-import { Readable } from "stream";
+import { Readable, Transform } from "stream";
 import { deleteFile, copyFile } from "../utils/s3-file-operations";
 import sendSqsMessage from "../service/sqs/send-sqs-message";
 
@@ -16,6 +16,7 @@ export const PROCESSED_DIRECTORY = 'parsed/';
 const s3Client = new S3Client({
   region: process.env.AWS_REGION,
 });
+
 
 export const fileParser = async (event: S3Event) => {
   const record = event.Records[0];
@@ -47,6 +48,11 @@ export const fileParser = async (event: S3Event) => {
 
     await new Promise<void>((resolve, reject) => {
       stream
+        .pipe(new Transform({
+          transform(chunk, encoding, callback) {
+            callback(null, chunk.toString().replace(/,/g, ';'));
+          }
+        }))
         .pipe(csv({ separator: ';' }))
         .on('data', (data) => {
           console.log('Parsed CSV row: ', data);

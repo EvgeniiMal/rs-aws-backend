@@ -9,6 +9,7 @@ import { Construct } from 'constructs';
 import path from 'path';
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import { getContext } from '../utils/context';
+import { HttpLambdaAuthorizer, HttpLambdaResponseType } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
 
 const PROJECT_ROOT = path.resolve(__dirname, '../../');
 const SRC_DIR = path.resolve(PROJECT_ROOT, 'src');
@@ -26,6 +27,7 @@ export class ImportServiceStack extends cdk.Stack {
 
     const catalogItemsQueueUrl = cdk.Fn.importValue('CatalogItemsQueueUrl');
     const catalogItemsQueueArn = cdk.Fn.importValue('CatalogItemsQueueArn');
+    const basicAuthorizerLambdaArn = cdk.Fn.importValue('BasicAuthorizerLambdaArn');
 
     const catalogItemsQueue = sqs.Queue.fromQueueAttributes(this, 'CatalogItemsQueue', {
       queueUrl: catalogItemsQueueUrl,
@@ -65,7 +67,7 @@ export class ImportServiceStack extends cdk.Stack {
       apiName: 'Import Service API',
       description: 'API for importing product files',
       corsPreflight: {
-        allowHeaders: ['Content-Type'],
+        allowHeaders: ['Content-Type', 'Authorization'],
         allowMethods: [
           apigV2.CorsHttpMethod.GET,
           apigV2.CorsHttpMethod.OPTIONS,
@@ -75,10 +77,27 @@ export class ImportServiceStack extends cdk.Stack {
       },
     });
 
+    const basicAuthorizerLambda = lambda.Function.fromFunctionAttributes(
+      this, 'BasicAuthorizerLambda', {
+      functionArn: basicAuthorizerLambdaArn,
+      sameEnvironment: true,
+    }
+    );
+
+    const basicAuthorizer = new HttpLambdaAuthorizer(
+      'BasicAuthorizer',
+      basicAuthorizerLambda,
+      {
+        responseTypes: [HttpLambdaResponseType.IAM],
+        identitySource: ['$request.header.Authorization'],
+      }
+    )
+
     api.addRoutes({
       path: '/import',
       methods: [apigV2.HttpMethod.GET],
       integration: importProductsFileIntegration,
+      authorizer: basicAuthorizer,
     });
 
     productsBucket.grantPut(importProductsFileLambda);
@@ -97,6 +116,7 @@ export class ImportServiceStack extends cdk.Stack {
       value: `${api.apiEndpoint}/import`,
       description: 'Import Service API endpoint',
       exportName: `${stage}-ImportServiceApiUrl`,
+
     });
 
   }
