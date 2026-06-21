@@ -11,6 +11,16 @@ config();
 
 const requestMethodsWithoutBody = ['GET', 'HEAD'] as const;
 
+const corsHeaderNames = new Set([
+  'access-control-allow-origin',
+  'access-control-allow-methods',
+  'access-control-allow-headers',
+  'access-control-allow-credentials',
+  'access-control-expose-headers',
+  'access-control-max-age',
+]);
+
+
 const server = createServer(async (req, res) => {
   const timestamp = new Date().toISOString();
   const reqId = randomUUID();
@@ -80,14 +90,21 @@ const server = createServer(async (req, res) => {
       logger.log(`Received response from upstream service with status ${statusCode}`);
 
       if (!statusCode) {
-        logger.error(`Upstream service did not return a status code for ${upstreamUrl}`);
-        res.writeHead(502, responseHeaders);
-        res.write(JSON.stringify({ error: 'Bad Gateway' }));
-        res.end();
+        sendBadGatewayResponse(res, logger, `Upstream service did not return a status code for ${upstreamUrl}`);
         return;
       }
 
-      const responseHeadersToSend = { ...headers, ...responseHeaders };
+      const filteredUpstreamHeaders = Object.fromEntries(
+        Object.entries(headers).filter(
+          ([key]) => !corsHeaderNames.has(key.toLowerCase())
+        )
+      );
+
+      const responseHeadersToSend = {
+        ...filteredUpstreamHeaders,
+        ...responseHeaders,
+      };
+
       res.writeHead(statusCode, responseHeadersToSend);
 
       upstreamResponse.pipe(res);
