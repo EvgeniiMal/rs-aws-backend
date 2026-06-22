@@ -40,6 +40,11 @@ const server = createServer(async (req, res) => {
     return;
   }
 
+  res.once('finish', () => {
+    logger.log(`Request ${method} ${url} completed with status ${res.statusCode}`);
+  });
+
+
   if (method === 'OPTIONS') {
     logger.log(`Handling CORS preflight request for ${url}`);
     res.writeHead(204, { ...responseHeaders });
@@ -67,7 +72,16 @@ const server = createServer(async (req, res) => {
 
   logger.log(`Mapped service name: ${serviceName}, target path: ${targetPath}, query string: ${queryString}`);
 
-  const upstreamUrl = `${upstreamServicePath.endsWith('/') ? upstreamServicePath.slice(0, -1) : upstreamServicePath}/${targetPath}${queryString}`;
+  const normalizedUpstreamServicePath = upstreamServicePath.endsWith('/')
+    ? upstreamServicePath.slice(0, -1)
+    : upstreamServicePath;
+
+  const pathSuffix = targetPath ? `/${targetPath}` : '';
+
+  const upstreamUrl = `${normalizedUpstreamServicePath}${pathSuffix}${queryString}`;
+
+  logger.log(`Constructed upstream URL: ${upstreamUrl}`);
+  logger.log(`${CACHED_RESPONSE_UPSTREAM_URL ? `Cached response URL: ${CACHED_RESPONSE_UPSTREAM_URL}` : 'No cached response URL configured'}`);
 
   if (
     upstreamUrl === CACHED_RESPONSE_UPSTREAM_URL
@@ -78,6 +92,7 @@ const server = createServer(async (req, res) => {
       res.writeHead(200, cachedResponse.headers);
       res.write(cachedResponse.value);
       res.end();
+      logger.log(`Served response from cache for ${upstreamUrl}`);
       return;
     }
   }
@@ -136,11 +151,6 @@ const server = createServer(async (req, res) => {
       res.writeHead(statusCode, responseHeadersToSend);
 
       upstreamResponse.pipe(res);
-
-      res.once('finish', () => {
-        logger.log(`Request to ${upstreamUrl} completed with status ${statusCode}`);
-      });
-
     });
 
   upstreamRequest.on('error', (err) => {
