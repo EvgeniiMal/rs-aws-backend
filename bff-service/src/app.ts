@@ -6,10 +6,12 @@ import { getLogger } from './utils/logger';
 import { getEnvPath } from './utils/get-env-path';
 import { config } from 'dotenv';
 import { sendBadGatewayResponse } from './utils/error-response';
+import { cacheData, getCachedData } from './utils/cache';
 
 config();
 
 const requestMethodsWithoutBody = ['GET', 'HEAD'] as const;
+const CACHED_RESPONSE_UPSTREAM_URL = process.env.CACHED_RESPONSE_UPSTREAM_URL || '';
 
 const corsHeaderNames = new Set([
   'access-control-allow-origin',
@@ -66,6 +68,21 @@ const server = createServer(async (req, res) => {
   logger.log(`Mapped service name: ${serviceName}, target path: ${targetPath}, query string: ${queryString}`);
 
   const upstreamUrl = `${upstreamServicePath.endsWith('/') ? upstreamServicePath.slice(0, -1) : upstreamServicePath}/${targetPath}${queryString}`;
+
+  if (
+    upstreamUrl === CACHED_RESPONSE_UPSTREAM_URL
+    && method === 'GET'
+  ) {
+    const cachedResponse = getCachedData(upstreamUrl, logger);
+    if (cachedResponse) {
+      res.writeHead(200, cachedResponse.headers);
+      res.write(cachedResponse.value);
+      res.end();
+      return;
+    }
+  }
+
+
   let serviceProtocol;
 
   try {
@@ -104,6 +121,17 @@ const server = createServer(async (req, res) => {
         ...filteredUpstreamHeaders,
         ...responseHeaders,
       };
+
+      if (upstreamUrl === CACHED_RESPONSE_UPSTREAM_URL && method === 'GET' && statusCode === 200) {
+        const chunks: Buffer[] = [];
+        upstreamResponse.on('data', (chunk) => {
+          chunks.push(chunk);
+        });
+        upstreamResponse.on('end', () => {
+          const responseData = Buffer.concat(chunks).toString();
+          cacheData(upstreamUrl, responseHeadersToSend, responseData, logger);
+        });
+      }
 
       res.writeHead(statusCode, responseHeadersToSend);
 
